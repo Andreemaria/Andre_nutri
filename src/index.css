@@ -546,3 +546,40 @@ body {
   50% { transform: translateX(5px); }
   75% { transform: translateX(-5px); }
 }
+
+/* AI Meal Plan Custom Styles */
+.day-card {
+  border-left: 6px solid var(--primary-color) !important;
+  background: #fff;
+  transition: all 0.3s ease;
+}
+
+.day-card:hover {
+  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.1);
+  transform: translateY(-4px);
+}
+
+.meal-group h5 {
+  color: var(--primary-color);
+  border-bottom: 1px solid var(--secondary-color);
+  padding-bottom: 0.25rem;
+}
+
+.options-list input:focus {
+  background: var(--white);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--secondary-color);
+}
+
+.meal-plan-display {
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.plan-item {
+  transition: all 0.2s;
+}
+
+.plan-item:hover {
+  border-color: var(--primary-color);
+  background-color: var(--secondary-color);
+}
