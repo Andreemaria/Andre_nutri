@@ -33,6 +33,7 @@ export default function PatientProfile() {
   
   // Consultation Modal State
   const [showModal, setShowModal] = useState(false);
+  const [isEditingConsultation, setIsEditingConsultation] = useState(false);
   const [newConsultation, setNewConsultation] = useState({
     data_consulta: new Date().toISOString().split('T')[0],
     peso: '',
@@ -131,25 +132,35 @@ export default function PatientProfile() {
     }
   };
 
-  // Save New Consultation
+  // Save New or Edit Consultation
   const handleSaveConsultation = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('consultas')
-        .insert([{
-          ...newConsultation,
-          paciente_id: id,
-          peso: parseFloat(newConsultation.peso) || null,
-          cintura: parseFloat(newConsultation.cintura) || null,
-          quadril: parseFloat(newConsultation.quadril) || null,
-          percentual_gordura: parseFloat(newConsultation.percentual_gordura) || null,
-        }]);
+      const consultationData = {
+        ...newConsultation,
+        paciente_id: id,
+        peso: parseFloat(newConsultation.peso) || null,
+        cintura: parseFloat(newConsultation.cintura) || null,
+        quadril: parseFloat(newConsultation.quadril) || null,
+        percentual_gordura: parseFloat(newConsultation.percentual_gordura) || null,
+      };
 
-      if (error) throw error;
+      if (isEditingConsultation) {
+        const { error } = await supabase
+          .from('consultas')
+          .update(consultationData)
+          .eq('id', newConsultation.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('consultas')
+          .insert([consultationData]);
+        if (error) throw error;
+      }
 
       setShowModal(false);
+      setIsEditingConsultation(false);
       setNewConsultation({
         data_consulta: new Date().toISOString().split('T')[0],
         peso: '',
@@ -168,7 +179,36 @@ export default function PatientProfile() {
     }
   };
 
-  // AI Meal Plan Functions
+  const handleEditConsultationClick = (consultation) => {
+    setNewConsultation({
+      ...consultation,
+      peso: consultation.peso?.toString() || '',
+      cintura: consultation.cintura?.toString() || '',
+      quadril: consultation.quadril?.toString() || '',
+      percentual_gordura: consultation.percentual_gordura?.toString() || '',
+    });
+    setIsEditingConsultation(true);
+    setShowModal(true);
+  };
+
+  // Meal Plan Functions
+  const handleCreateManualPlan = () => {
+    const blankPlan = [
+      "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"
+    ].map(dia => ({
+      dia,
+      refeicoes: {
+        cafe_da_manha: ["", "", "", "", ""],
+        lanche_manha: ["", "", "", "", ""],
+        almoco: ["", "", "", "", ""],
+        lanche_tarde: ["", "", "", "", ""],
+        jantar: ["", "", "", "", ""]
+      }
+    }));
+    setCurrentPlan(blankPlan);
+    setViewingPlan(null);
+  };
+
   const handleGeneratePlan = async () => {
     setIsGenerating(true);
     setCurrentPlan(null);
@@ -540,7 +580,7 @@ export default function PatientProfile() {
             {/* List Header */}
             <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 className="section-subtitle">Histórico de Consultas</h3>
-              <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowModal(true)}>
+              <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => { setIsEditingConsultation(false); setShowModal(true); }}>
                 <Plus size={20} />
                 Nova Consulta
               </button>
@@ -598,6 +638,22 @@ export default function PatientProfile() {
                           </span>
                         </div>
                       )}
+
+                      <div className="consultation-actions" style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
+                        <button 
+                          className="btn btn-sm" 
+                          style={{ 
+                            background: 'var(--secondary-color)', 
+                            color: 'var(--primary-color)',
+                            width: 'auto',
+                            padding: '0.4rem 0.8rem',
+                            fontSize: '0.85rem'
+                          }}
+                          onClick={() => handleEditConsultationClick(c)}
+                        >
+                          Editar Consulta
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -616,24 +672,34 @@ export default function PatientProfile() {
             <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h3 className="section-subtitle">Planos Alimentares</h3>
               {!currentPlan && !viewingPlan && (
-                <button 
-                  className="btn btn-primary" 
-                  style={{ width: 'auto' }} 
-                  onClick={handleGeneratePlan}
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? (
-                    <>
-                      <div className="spinner" style={{ borderTopColor: '#fff' }}></div>
-                      Gerando...
-                    </>
-                  ) : (
-                    <>
-                      <Activity size={20} />
-                      Gerar Plano Alimentar com IA
-                    </>
-                  )}
-                </button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button 
+                    className="btn" 
+                    style={{ width: 'auto', background: 'var(--secondary-color)', color: 'var(--primary-color)' }} 
+                    onClick={handleCreateManualPlan}
+                  >
+                    <Plus size={20} />
+                    Criar Plano Manualmente
+                  </button>
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ width: 'auto' }} 
+                    onClick={handleGeneratePlan}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <div className="spinner" style={{ borderTopColor: '#fff' }}></div>
+                        Gerando...
+                      </>
+                    ) : (
+                      <>
+                        <Activity size={20} />
+                        Gerar Plano Alimentar com IA
+                      </>
+                    )}
+                  </button>
+                </div>
               )}
               {(currentPlan || viewingPlan) && (
                 <button 
@@ -758,12 +824,13 @@ export default function PatientProfile() {
         )}
       </div>
 
-      {/* NEW CONSULTATION MODAL */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content auth-card" style={{ maxWidth: '600px', width: '90%' }}>
             <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h2 className="auth-title" style={{ margin: 0 }}>Nova Consulta</h2>
+              <h2 className="auth-title" style={{ margin: 0 }}>
+                {isEditingConsultation ? 'Editar Consulta' : 'Nova Consulta'}
+              </h2>
               <button className="btn-icon" onClick={() => setShowModal(false)}>
                 <X size={24} />
               </button>
@@ -855,7 +922,7 @@ export default function PatientProfile() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Salvando...' : 'Salvar Consulta'}
+                  {saving ? 'Salvando...' : (isEditingConsultation ? 'Atualizar Consulta' : 'Salvar Consulta')}
                 </button>
               </div>
             </form>
