@@ -76,13 +76,22 @@ src/
 
 ## 📝 Processo de Desenvolvimento
 
-Este projeto foi desenvolvido com foco em robustez e escalabilidade. O processo seguiu as seguintes etapas:
+Este projeto foi desenvolvido utilizando técnicas avançadas de **Agentic Coding** e as seguintes etapas estratégicas:
 
-1.  **Definição de Requisitos**: Identificamos as dores reais de um nutricionista, priorizando a centralização dos dados do paciente (desde a primeira consulta até a dieta).
-2.  **Arquitetura de Dados**: O banco de dados foi estruturado no Supabase para garantir segurança e facilidade na gestão de relacionamentos complexos (Pacientes -> Consultas -> Medidas).
-3.  **Design System**: Optamos por não utilizar frameworks CSS (como Tailwind) para ter controle total sobre a estética "Premium". Criamos um sistema de cores baseado em tons de Esmeralda e Slate, transmitindo saúde e profissionalismo.
-4.  **Componentização**: A aplicação foi construída de forma modular, facilitando a manutenção e a adição de futuras funcionalidades como "Gerador de Dietas por IA".
-5.  **Segurança**: Implementamos guards de rotas para garantir que apenas usuários autenticados acessem os dados sensíveis dos pacientes.
+1.  **Planejamento de Requisitos**: Definição de fluxos para nutricionistas, focando em centralização de dados e usabilidade (UX).
+2.  **Integração com Supabase MCP**: Utilizamos o [Supabase Model Context Protocol (MCP)](https://github.com/supabase-community/supabase-mcp) para gerenciar o banco de dados diretamente durante o desenvolvimento, permitindo uma sincronização rápida entre o código e o esquema do PostgreSQL.
+3.  **Design System Customizado**: Construção de uma interface "Premium" utilizando CSS puro, evitando a dependência de frameworks externos e garantindo máxima performance e controle estético.
+4.  **Backend Escalável**: Implementação de tabelas com Row Level Security (RLS) no Supabase para garantir a privacidade dos dados sensíveis dos pacientes.
+5.  **Inteligência Artificial**: Configuração de Edge Functions para geração de planos alimentares personalizados utilizando modelos de IA generativa.
+
+---
+
+## 🚀 Deploy
+
+O projeto está configurado para deploy automático em plataformas como **Vercel** ou **Netlify**. Para fazer o deploy manualmente via Vercel:
+
+1. Instale a Vercel CLI: `npm i -g vercel`
+2. Execute: `vercel --prod`
 
 ---
 
