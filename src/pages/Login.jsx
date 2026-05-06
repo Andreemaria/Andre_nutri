@@ -45,7 +45,7 @@ export default function Login() {
         <div className="auth-header">
           <div className="auth-logo">
             <Activity size={32} />
-            <span>NutriSystem</span>
+            <span>AndreNutri</span>
           </div>
           <h1 className="auth-title">Bem-vindo de volta</h1>
           <p className="auth-subtitle">Acesso para Nutricionistas</p>

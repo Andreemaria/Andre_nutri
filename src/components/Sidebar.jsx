@@ -16,7 +16,7 @@ export default function Sidebar() {
         <div className="card-icon-wrapper" style={{ padding: '0.5rem', borderRadius: '10px' }}>
           <Leaf size={24} />
         </div>
-        <span>Nutri Andre</span>
+        <span>AndreNutri</span>
       </div>
 
       <nav className="sidebar-nav">

@@ -79,7 +79,7 @@ export default function Registration() {
         <div className="auth-header">
           <div className="auth-logo">
             <Activity size={32} />
-            <span>NutriSystem</span>
+            <span>AndreNutri</span>
           </div>
           <h1 className="auth-title">Crie sua conta</h1>
           <p className="auth-subtitle">Registre-se como perfil profissional</p>
