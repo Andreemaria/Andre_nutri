@@ -10,6 +10,9 @@ import {
 } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import { useRef } from 'react';
 
 export default function PatientProfile() {
   const { id } = useParams();
@@ -25,6 +28,7 @@ export default function PatientProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const reportRef = useRef();
   
   // Meal Plan States
   const [isGenerating, setIsGenerating] = useState(false);
@@ -297,7 +301,39 @@ export default function PatientProfile() {
         <p style={{ marginLeft: '1rem', color: 'var(--text-light)' }}>Carregando perfil...</p>
       </div>
     );
-  }
+  const handleExportPDF = async () => {
+    setLoading(true);
+    try {
+      const element = reportRef.current;
+      // Forçamos o elemento a ficar visível temporariamente para captura
+      element.style.display = 'block';
+      
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: 800
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`relatorio_${patient.nome.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+      
+      element.style.display = 'none';
+      setSuccessMsg('Relatório PDF gerado com sucesso!');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      alert('Erro ao gerar o relatório PDF.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="patient-profile-container">
@@ -323,6 +359,16 @@ export default function PatientProfile() {
             {successMsg}
           </div>
         )}
+
+        <button 
+          onClick={handleExportPDF}
+          className="btn btn-secondary"
+          style={{ width: 'auto', display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+          disabled={loading || !patient}
+        >
+          <FileText size={20} />
+          Exportar Relatório
+        </button>
       </header>
 
       {/* Main Navigation Tabs */}
@@ -1045,6 +1091,86 @@ export default function PatientProfile() {
           gap: 2rem;
         }
         
+        .metric {
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .metric .label {
+      {/* Componente Invisível para Geração de PDF */}
+      <div 
+        ref={reportRef} 
+        style={{ 
+          display: 'none', 
+          width: '800px', 
+          padding: '40px', 
+          background: '#fff', 
+          fontFamily: 'Inter, sans-serif' 
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #10b981', paddingBottom: '20px', marginBottom: '30px' }}>
+          <div>
+            <h1 style={{ margin: 0, color: '#10b981', fontSize: '24px' }}>AndreNutri</h1>
+            <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>Relatório de Evolução Nutricional</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ margin: 0, fontWeight: 600 }}>{patient?.nome}</p>
+            <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Gerado em: {new Date().toLocaleDateString('pt-BR')}</p>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '30px' }}>
+          <h2 style={{ fontSize: '18px', marginBottom: '15px', color: '#1e293b' }}>Resumo do Paciente</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+            <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px' }}>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 5px 0' }}>Peso Inicial</p>
+              <p style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>{patient?.peso_inicial} kg</p>
+            </div>
+            <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px' }}>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 5px 0' }}>Altura</p>
+              <p style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>{patient?.altura} cm</p>
+            </div>
+            <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px' }}>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 5px 0' }}>IMC</p>
+              <p style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
+                {patient?.peso_inicial && patient?.altura 
+                  ? (patient.peso_inicial / Math.pow(patient.altura/100, 2)).toFixed(1) 
+                  : '-'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 style={{ fontSize: '18px', marginBottom: '15px', color: '#1e293b' }}>Histórico de Consultas</h2>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f1f5f9' }}>
+                <th style={{ textAlign: 'left', padding: '12px', borderBottom: '1px solid #e2e8f0', fontSize: '12px' }}>Data</th>
+                <th style={{ textAlign: 'left', padding: '12px', borderBottom: '1px solid #e2e8f0', fontSize: '12px' }}>Peso (kg)</th>
+                <th style={{ textAlign: 'left', padding: '12px', borderBottom: '1px solid #e2e8f0', fontSize: '12px' }}>Cintura (cm)</th>
+                <th style={{ textAlign: 'left', padding: '12px', borderBottom: '1px solid #e2e8f0', fontSize: '12px' }}>% Gordura</th>
+              </tr>
+            </thead>
+            <tbody>
+              {consultations.map((c, i) => (
+                <tr key={i}>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0', fontSize: '14px' }}>{new Date(c.data_consulta).toLocaleDateString('pt-BR')}</td>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0', fontSize: '14px' }}>{c.peso || '-'}</td>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0', fontSize: '14px' }}>{c.cintura || '-'}</td>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0', fontSize: '14px' }}>{c.percentual_gordura || '-'}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ marginTop: '50px', textAlign: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+          <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>AndreNutri - Sistema de Gestão Nutricional Inteligente</p>
+        </div>
+      </div>
+
+      <style>{`
         .metric {
           display: flex;
           flex-direction: column;
